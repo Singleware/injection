@@ -54,11 +54,10 @@ export class Manager {
         return new Proxy(type, {
           construct: (type: ClassConstructor<T>, parameters: IArguments, target: any): T => {
             const dependencies = <any>{};
-            list.map(type => {
-              const instance = this.resolve(type);
+            for (const type of list) {
               const settings = <Settings>repository.get(type.prototype);
-              dependencies[settings.name || type.name] = instance;
-            });
+              dependencies[settings.name || type.name] = this.resolve(type);
+            }
             return Reflect.construct(type, [dependencies, parameters], target);
           }
         });
@@ -79,11 +78,11 @@ export class Manager {
       throw new TypeError(`Dependency type ${type ? type.name : void 0} does not exists.`);
     }
     if (!settings.singleton) {
-      return new type();
+      return this.construct(type);
     }
     let instance = <T>this.instances.get(type);
     if (!instance) {
-      this.instances.set(type, (instance = new type()));
+      this.instances.set(type, (instance = this.construct(type)));
     }
     return instance;
   }
