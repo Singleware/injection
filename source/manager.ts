@@ -4,7 +4,7 @@
  */
 import * as Class from '@singleware/class';
 
-import { ClassConstructor, ClassDecorator } from './types';
+import { Constructor, ClassDecorator } from './types';
 import { Settings } from './settings';
 
 /**
@@ -16,13 +16,13 @@ export class Manager {
    * Map of singleton instances.
    */
   @Class.Private()
-  private instances: WeakMap<ClassConstructor<any>, Object> = new WeakMap();
+  private instances: WeakMap<Constructor<any>, Object> = new WeakMap();
 
   /**
    * Map of dependencies.
    */
   @Class.Private()
-  private dependencies: WeakMap<ClassConstructor<any>, Settings> = new WeakMap();
+  private dependencies: WeakMap<Constructor<any>, Settings> = new WeakMap();
 
   /**
    * Decorates the specified class to be a dependency class.
@@ -31,14 +31,12 @@ export class Manager {
    */
   @Class.Public()
   public Describe(settings?: Settings): ClassDecorator {
-    return Class.bindCallback(
-      <T extends Object>(type: ClassConstructor<T>): void => {
-        if (this.dependencies.has(type.prototype)) {
-          throw new TypeError(`Dependency type ${type.name} is already described.`);
-        }
-        this.dependencies.set(type.prototype, settings || {});
+    return <T extends Object>(type: Constructor<T>): void => {
+      if (this.dependencies.has(type.prototype)) {
+        throw new TypeError(`Dependency type ${type.name} is already described.`);
       }
-    );
+      this.dependencies.set(type.prototype, settings || {});
+    };
   }
 
   /**
@@ -47,22 +45,20 @@ export class Manager {
    * @returns Returns the decorator method.
    */
   @Class.Public()
-  public Inject(...list: ClassConstructor<any>[]): ClassDecorator {
-    return Class.bindCallback(
-      <T extends Object>(type: ClassConstructor<T>): ClassConstructor<T> => {
-        const repository = this.dependencies;
-        return new Proxy(type, {
-          construct: (type: ClassConstructor<T>, parameters: IArguments, target: any): T => {
-            const dependencies = <any>{};
-            for (const type of list) {
-              const settings = <Settings>repository.get(type.prototype);
-              dependencies[settings.name || type.name] = this.resolve(type);
-            }
-            return Reflect.construct(type, [dependencies, parameters], target);
+  public Inject(...list: Constructor<any>[]): ClassDecorator {
+    return <T extends Object>(type: Constructor<T>): Constructor<T> => {
+      const repository = this.dependencies;
+      return new Proxy(type, {
+        construct: (type: Constructor<T>, parameters: IArguments, target: any): T => {
+          const dependencies = <any>{};
+          for (const type of list) {
+            const settings = <Settings>repository.get(type.prototype);
+            dependencies[settings.name || type.name] = this.resolve(type);
           }
-        });
-      }
-    );
+          return Reflect.construct(type, [dependencies, parameters], target);
+        }
+      });
+    };
   }
 
   /**
@@ -72,19 +68,19 @@ export class Manager {
    * @returns Returns the resolved instance.
    */
   @Class.Public()
-  public resolve<T extends Object>(type: ClassConstructor<T>): T {
+  public resolve<T extends Object>(type: Constructor<T>): T {
     const settings = <Settings>this.dependencies.get(type.prototype);
     if (!settings) {
       throw new TypeError(`Dependency type ${type ? type.name : void 0} does not exists.`);
     }
-    if (!settings.singleton) {
-      return this.construct(type);
+    if (settings.singleton) {
+      let instance = <T>this.instances.get(type);
+      if (!instance) {
+        this.instances.set(type, (instance = this.construct(type)));
+      }
+      return instance;
     }
-    let instance = <T>this.instances.get(type);
-    if (!instance) {
-      this.instances.set(type, (instance = this.construct(type)));
-    }
-    return instance;
+    return this.construct(type);
   }
 
   /**
@@ -94,7 +90,7 @@ export class Manager {
    * @returns Returns a new instance of the specified class type.
    */
   @Class.Public()
-  public construct<T extends Object>(type: ClassConstructor<T>, ...parameters: any[]): T {
+  public construct<T extends Object>(type: Constructor<T>, ...parameters: any[]): T {
     return new type(...parameters);
   }
 }

@@ -11,8 +11,8 @@ import * as Injection from '../source';
 /**
  * Example of dependency A.
  */
-@Class.Describe()
 @Injection.Describe()
+@Class.Describe()
 class DependencyA {
   @Class.Private()
   private counter = 0;
@@ -27,23 +27,23 @@ class DependencyA {
  * Example of dependency B.
  * This is a singleton dependency.
  */
-@Class.Describe()
 @Injection.Describe({ singleton: true })
+@Class.Describe()
 class DependencyB extends DependencyA {}
 
 /**
  * Example of dependency C.
  * This is a named dependency.
  */
-@Class.Describe()
 @Injection.Describe({ name: 'named' })
+@Class.Describe()
 class DependencyC extends DependencyA {}
 
 /**
  * Example of dependent A.
  */
-@Class.Describe()
 @Injection.Inject(DependencyA, DependencyC)
+@Class.Describe()
 class DependentA {
   /**
    * Default constructor.
@@ -58,8 +58,8 @@ class DependentA {
 /**
  * Example of dependent B.
  */
-@Class.Describe()
 @Injection.Inject(DependencyA, DependencyB)
+@Class.Describe()
 class DependentB {
   /**
    * Default constructor.
@@ -74,9 +74,10 @@ class DependentB {
 /**
  * Construct the instances solving all the dependencies.
  */
-const instances = [
+[
   Injection.construct(DependentA, 'Instance 1'),
   Injection.construct(DependentA, 'Instance 2'),
   Injection.construct(DependentB, 'Instance 3'),
-  Injection.construct(DependentB, 'Instance 4')
+  Injection.construct(DependentB, 'Instance 4'),
+  Injection.construct(DependentB, 'Instance 5')
 ];

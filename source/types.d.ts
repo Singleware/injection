@@ -6,9 +6,9 @@
 /**
  * Type declaration for class constructors.
  */
-export type ClassConstructor<T> = new (...parameters: any[]) => T;
+export type Constructor<T extends Object = any> = new (...args: any[]) => T;
 
 /**
  * Type declaration for class decorators.
  */
-export type ClassDecorator = <T extends Object>(type: ClassConstructor<T>) => any;
+export type ClassDecorator = <T extends Object>(type: Constructor<T>) => any;

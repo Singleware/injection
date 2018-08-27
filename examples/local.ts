@@ -16,8 +16,8 @@ const Manager = new Injection.Manager();
 /**
  * Example of dependency A.
  */
-@Class.Describe()
 @Manager.Describe()
+@Class.Describe()
 class DependencyA {
   @Class.Private()
   private counter = 0;
@@ -32,23 +32,23 @@ class DependencyA {
  * Example of dependency B.
  * This is a singleton dependency.
  */
-@Class.Describe()
 @Manager.Describe({ singleton: true })
+@Class.Describe()
 class DependencyB extends DependencyA {}
 
 /**
  * Example of dependency C.
  * This is a named dependency.
  */
-@Class.Describe()
 @Manager.Describe({ name: 'named' })
+@Class.Describe()
 class DependencyC extends DependencyA {}
 
 /**
  * Example of dependent A.
  */
-@Class.Describe()
 @Manager.Inject(DependencyA, DependencyC)
+@Class.Describe()
 class DependentA {
   /**
    * Default constructor.
@@ -63,8 +63,8 @@ class DependentA {
 /**
  * Example of dependent B.
  */
-@Class.Describe()
 @Manager.Inject(DependencyA, DependencyB)
+@Class.Describe()
 class DependentB {
   /**
    * Default constructor.
@@ -79,9 +79,10 @@ class DependentB {
 /**
  * Construct the instances solving all the dependencies.
  */
-const instances = [
+[
   Manager.construct(DependentA, 'Instance 1'),
   Manager.construct(DependentA, 'Instance 2'),
   Manager.construct(DependentB, 'Instance 3'),
-  Manager.construct(DependentB, 'Instance 4')
+  Manager.construct(DependentB, 'Instance 4'),
+  Manager.construct(DependentB, 'Instance 5')
 ];

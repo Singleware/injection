@@ -40,8 +40,8 @@ __decorate([
     Class.Public()
 ], DependencyA.prototype, "count", null);
 DependencyA = __decorate([
-    Class.Describe(),
-    Manager.Describe()
+    Manager.Describe(),
+    Class.Describe()
 ], DependencyA);
 /**
  * Example of dependency B.
@@ -50,8 +50,8 @@ DependencyA = __decorate([
 let DependencyB = class DependencyB extends DependencyA {
 };
 DependencyB = __decorate([
-    Class.Describe(),
-    Manager.Describe({ singleton: true })
+    Manager.Describe({ singleton: true }),
+    Class.Describe()
 ], DependencyB);
 /**
  * Example of dependency C.
@@ -60,8 +60,8 @@ DependencyB = __decorate([
 let DependencyC = class DependencyC extends DependencyA {
 };
 DependencyC = __decorate([
-    Class.Describe(),
-    Manager.Describe({ name: 'named' })
+    Manager.Describe({ name: 'named' }),
+    Class.Describe()
 ], DependencyC);
 /**
  * Example of dependent A.
@@ -77,8 +77,8 @@ let DependentA = class DependentA {
     }
 };
 DependentA = __decorate([
-    Class.Describe(),
-    Manager.Inject(DependencyA, DependencyC)
+    Manager.Inject(DependencyA, DependencyC),
+    Class.Describe()
 ], DependentA);
 /**
  * Example of dependent B.
@@ -94,15 +94,16 @@ let DependentB = class DependentB {
     }
 };
 DependentB = __decorate([
-    Class.Describe(),
-    Manager.Inject(DependencyA, DependencyB)
+    Manager.Inject(DependencyA, DependencyB),
+    Class.Describe()
 ], DependentB);
 /**
  * Construct the instances solving all the dependencies.
  */
-const instances = [
+[
     Manager.construct(DependentA, 'Instance 1'),
     Manager.construct(DependentA, 'Instance 2'),
     Manager.construct(DependentB, 'Instance 3'),
-    Manager.construct(DependentB, 'Instance 4')
+    Manager.construct(DependentB, 'Instance 4'),
+    Manager.construct(DependentB, 'Instance 5')
 ];

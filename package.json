@@ -7,7 +7,7 @@
   "name": "@singleware/injection",
   "description": "Singleware class injection package.",
   "license": "MIT",
-  "version": "1.0.13",
+  "version": "1.0.17",
   "main": "release/source/index.js",
   "types": "release/types/index.d.ts",
   "keywords": [
@@ -25,7 +25,7 @@
     "node": ">=8"
   },
   "dependencies": {
-    "@singleware/class": "^1.0.13"
+    "@singleware/class": "^1.1.9"
   },
   "devDependencies": {
     "prettier": "^1.14.2",

@@ -34,12 +34,12 @@ let Manager = class Manager {
      * @returns Returns the decorator method.
      */
     Describe(settings) {
-        return Class.bindCallback((type) => {
+        return (type) => {
             if (this.dependencies.has(type.prototype)) {
                 throw new TypeError(`Dependency type ${type.name} is already described.`);
             }
             this.dependencies.set(type.prototype, settings || {});
-        });
+        };
     }
     /**
      * Decorates the specified class to be injected by the specified dependencies.
@@ -47,7 +47,7 @@ let Manager = class Manager {
      * @returns Returns the decorator method.
      */
     Inject(...list) {
-        return Class.bindCallback((type) => {
+        return (type) => {
             const repository = this.dependencies;
             return new Proxy(type, {
                 construct: (type, parameters, target) => {
@@ -59,7 +59,7 @@ let Manager = class Manager {
                     return Reflect.construct(type, [dependencies, parameters], target);
                 }
             });
-        });
+        };
     }
     /**
      * Resolves the current instance of the specified class type.
@@ -72,14 +72,14 @@ let Manager = class Manager {
         if (!settings) {
             throw new TypeError(`Dependency type ${type ? type.name : void 0} does not exists.`);
         }
-        if (!settings.singleton) {
-            return this.construct(type);
+        if (settings.singleton) {
+            let instance = this.instances.get(type);
+            if (!instance) {
+                this.instances.set(type, (instance = this.construct(type)));
+            }
+            return instance;
         }
-        let instance = this.instances.get(type);
-        if (!instance) {
-            this.instances.set(type, (instance = this.construct(type)));
-        }
-        return instance;
+        return this.construct(type);
     }
     /**
      * Constructs a new instance of the specified class type.

@@ -1,4 +1,4 @@
-import { ClassConstructor, ClassDecorator } from './types';
+import { Constructor, ClassDecorator } from './types';
 import { Settings } from './settings';
 /**
  * Dependency manager class.
@@ -23,19 +23,19 @@ export declare class Manager {
      * @param list List of dependencies.
      * @returns Returns the decorator method.
      */
-    Inject(...list: ClassConstructor<any>[]): ClassDecorator;
+    Inject(...list: Constructor<any>[]): ClassDecorator;
     /**
      * Resolves the current instance of the specified class type.
      * @param type Class type.
      * @throws Throws a type error when the class type does not exists in the dependencies.
      * @returns Returns the resolved instance.
      */
-    resolve<T extends Object>(type: ClassConstructor<T>): T;
+    resolve<T extends Object>(type: Constructor<T>): T;
     /**
      * Constructs a new instance of the specified class type.
      * @param type Class type.
      * @param parameters Initial parameters.
      * @returns Returns a new instance of the specified class type.
      */
-    construct<T extends Object>(type: ClassConstructor<T>, ...parameters: any[]): T;
+    construct<T extends Object>(type: Constructor<T>, ...parameters: any[]): T;
 }

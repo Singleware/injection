@@ -36,8 +36,8 @@ __decorate([
     Class.Public()
 ], DependencyA.prototype, "count", null);
 DependencyA = __decorate([
-    Class.Describe(),
-    Injection.Describe()
+    Injection.Describe(),
+    Class.Describe()
 ], DependencyA);
 /**
  * Example of dependency B.
@@ -46,8 +46,8 @@ DependencyA = __decorate([
 let DependencyB = class DependencyB extends DependencyA {
 };
 DependencyB = __decorate([
-    Class.Describe(),
-    Injection.Describe({ singleton: true })
+    Injection.Describe({ singleton: true }),
+    Class.Describe()
 ], DependencyB);
 /**
  * Example of dependency C.
@@ -56,8 +56,8 @@ DependencyB = __decorate([
 let DependencyC = class DependencyC extends DependencyA {
 };
 DependencyC = __decorate([
-    Class.Describe(),
-    Injection.Describe({ name: 'named' })
+    Injection.Describe({ name: 'named' }),
+    Class.Describe()
 ], DependencyC);
 /**
  * Example of dependent A.
@@ -73,8 +73,8 @@ let DependentA = class DependentA {
     }
 };
 DependentA = __decorate([
-    Class.Describe(),
-    Injection.Inject(DependencyA, DependencyC)
+    Injection.Inject(DependencyA, DependencyC),
+    Class.Describe()
 ], DependentA);
 /**
  * Example of dependent B.
@@ -90,15 +90,16 @@ let DependentB = class DependentB {
     }
 };
 DependentB = __decorate([
-    Class.Describe(),
-    Injection.Inject(DependencyA, DependencyB)
+    Injection.Inject(DependencyA, DependencyB),
+    Class.Describe()
 ], DependentB);
 /**
  * Construct the instances solving all the dependencies.
  */
-const instances = [
+[
     Injection.construct(DependentA, 'Instance 1'),
     Injection.construct(DependentA, 'Instance 2'),
     Injection.construct(DependentB, 'Instance 3'),
-    Injection.construct(DependentB, 'Instance 4')
+    Injection.construct(DependentB, 'Instance 4'),
+    Injection.construct(DependentB, 'Instance 5')
 ];

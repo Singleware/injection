@@ -8,8 +8,8 @@ export { Manager } from './manager';
 import { Settings } from './settings';
 export { Settings } from './settings';
 
-import { ClassConstructor, ClassDecorator } from './types';
-export type Dependency<T> = ClassConstructor<T>;
+import { Constructor, ClassDecorator } from './types';
+export type Dependency<T> = Constructor<T>;
 
 // Global manager
 const global = new Manager();
