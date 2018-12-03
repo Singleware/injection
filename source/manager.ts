@@ -11,18 +11,18 @@ import { Settings } from './settings';
  * Dependency manager class.
  */
 @Class.Describe()
-export class Manager {
+export class Manager extends Class.Null {
   /**
    * Map of singleton instances.
    */
   @Class.Private()
-  private instances: WeakMap<Constructor<any>, Object> = new WeakMap();
+  private instances = new WeakMap<Constructor<any>, Object>();
 
   /**
    * Map of dependencies.
    */
   @Class.Private()
-  private dependencies: WeakMap<Constructor<any>, Settings> = new WeakMap();
+  private dependencies = new WeakMap<Constructor<any>, Settings>();
 
   /**
    * Decorates the specified class to be a dependency class.

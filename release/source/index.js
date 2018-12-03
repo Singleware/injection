@@ -4,19 +4,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Copyright (C) 2018 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-const manager_1 = require("./manager");
-var manager_2 = require("./manager");
-exports.Manager = manager_2.Manager;
-// Global manager
-const global = new manager_1.Manager();
+var manager_1 = require("./manager");
+exports.Manager = manager_1.Manager;
 /**
- * Decorates the specified class to be a dependency class.
+ * Declarations.
+ */
+const manager_2 = require("./manager");
+// Global manager.
+const global = new manager_2.Manager();
+/**
+ * Decorates the specified class to be a global dependency class.
  * @param settings Dependency settings.
  * @returns Returns the decorator method.
  */
 exports.Describe = (settings) => global.Describe(settings);
 /**
- * Decorates the specified class to be injected by the specified dependencies.
+ * Decorates the specified class to be injected by the specified global dependencies.
  * @param list List of dependencies.
  * @returns Returns the decorator method.
  */

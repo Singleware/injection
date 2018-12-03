@@ -1,9 +1,14 @@
+/**
+ * Copyright (C) 2018 Silas B. Domingos
+ * This source code is licensed under the MIT License as described in the file LICENSE.
+ */
+import * as Class from '@singleware/class';
 import { Constructor, ClassDecorator } from './types';
 import { Settings } from './settings';
 /**
  * Dependency manager class.
  */
-export declare class Manager {
+export declare class Manager extends Class.Null {
     /**
      * Map of singleton instances.
      */

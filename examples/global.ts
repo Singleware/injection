@@ -13,7 +13,7 @@ import * as Injection from '../source';
  */
 @Injection.Describe()
 @Class.Describe()
-class DependencyA {
+class DependencyA extends Class.Null {
   @Class.Private()
   private counter = 0;
 
@@ -44,13 +44,14 @@ class DependencyC extends DependencyA {}
  */
 @Injection.Inject(DependencyA, DependencyC)
 @Class.Describe()
-class DependentA {
+class DependentA extends Class.Null {
   /**
    * Default constructor.
    * @param dependencies Map of dependencies.
    * @param parameters List of parameters.
    */
   constructor(dependencies: any, parameters: any[]) {
+    super();
     console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'C:', dependencies.named.count());
   }
 }
@@ -60,13 +61,14 @@ class DependentA {
  */
 @Injection.Inject(DependencyA, DependencyB)
 @Class.Describe()
-class DependentB {
+class DependentB extends Class.Null {
   /**
    * Default constructor.
    * @param dependencies Map of dependencies.
    * @param parameters List of parameters.
    */
   constructor(dependencies: any, parameters: any[]) {
+    super();
     console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'B:', dependencies.DependencyB.count());
   }
 }

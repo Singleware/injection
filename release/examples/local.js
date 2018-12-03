@@ -22,11 +22,12 @@ const Manager = new Injection.Manager();
 /**
  * Example of dependency A.
  */
-let DependencyA = class DependencyA {
+let DependencyA = class DependencyA extends Class.Null {
     /**
      * Example of dependency A.
      */
     constructor() {
+        super(...arguments);
         this.counter = 0;
     }
     count() {
@@ -66,13 +67,14 @@ DependencyC = __decorate([
 /**
  * Example of dependent A.
  */
-let DependentA = class DependentA {
+let DependentA = class DependentA extends Class.Null {
     /**
      * Default constructor.
      * @param dependencies Map of dependencies.
      * @param parameters List of parameters.
      */
     constructor(dependencies, parameters) {
+        super();
         console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'C:', dependencies.named.count());
     }
 };
@@ -83,13 +85,14 @@ DependentA = __decorate([
 /**
  * Example of dependent B.
  */
-let DependentB = class DependentB {
+let DependentB = class DependentB extends Class.Null {
     /**
      * Default constructor.
      * @param dependencies Map of dependencies.
      * @param parameters List of parameters.
      */
     constructor(dependencies, parameters) {
+        super();
         console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'B:', dependencies.DependencyB.count());
     }
 };

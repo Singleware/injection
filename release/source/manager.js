@@ -14,11 +14,12 @@ const Class = require("@singleware/class");
 /**
  * Dependency manager class.
  */
-let Manager = class Manager {
+let Manager = class Manager extends Class.Null {
     /**
      * Dependency manager class.
      */
     constructor() {
+        super(...arguments);
         /**
          * Map of singleton instances.
          */

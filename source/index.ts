@@ -2,27 +2,29 @@
  * Copyright (C) 2018 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
-import { Manager } from './manager';
 export { Manager } from './manager';
-
-import { Settings } from './settings';
 export { Settings } from './settings';
 
+/**
+ * Declarations.
+ */
+import { Manager } from './manager';
+import { Settings } from './settings';
 import { Constructor, ClassDecorator } from './types';
 export type Dependency<T> = Constructor<T>;
 
-// Global manager
+// Global manager.
 const global = new Manager();
 
 /**
- * Decorates the specified class to be a dependency class.
+ * Decorates the specified class to be a global dependency class.
  * @param settings Dependency settings.
  * @returns Returns the decorator method.
  */
 export const Describe = (settings?: Settings): ClassDecorator => global.Describe(settings);
 
 /**
- * Decorates the specified class to be injected by the specified dependencies.
+ * Decorates the specified class to be injected by the specified global dependencies.
  * @param list List of dependencies.
  * @returns Returns the decorator method.
  */
