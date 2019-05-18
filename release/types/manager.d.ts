@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2018 Silas B. Domingos
+/*!
+ * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
  */
 import * as Class from '@singleware/class';
@@ -24,7 +24,7 @@ export declare class Manager extends Class.Null {
      */
     Describe(settings?: Settings): ClassDecorator;
     /**
-     * Decorates the specified class to be injected by the specified dependencies.
+     * Decorates a class or property to be injected by the specified dependencies.
      * @param list List of dependencies.
      * @returns Returns the decorator method.
      */
@@ -32,7 +32,7 @@ export declare class Manager extends Class.Null {
     /**
      * Resolves the current instance of the specified class type.
      * @param type Class type.
-     * @throws Throws a type error when the class type does not exists in the dependencies.
+     * @throws Throws a type error when the class type isn't a described dependency.
      * @returns Returns the resolved instance.
      */
     resolve<T extends Object>(type: Constructor<T>): T;

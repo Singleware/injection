@@ -36,8 +36,13 @@
     "semi": true
   },
   "scripts": {
-    "build": "npm run make && npm run update",
-    "make": "tsc",
-    "update": "cp -Rf ./source/*.d.ts ./release/types"
+    "build": "npm run clean && npm run make",
+    "clean": "rm -rf ./release",
+    "make": "npm run make-source && npm run make-examples",
+    "make-source": "npm run compile-source && npm run update-source",
+    "compile-source": "tsc -p ./source",
+    "update-source": "cp -Rf ./source/*.d.ts ./release/types",
+    "make-examples": "npm run compile-examples",
+    "compile-examples": "tsc -p ./examples"
   }
 }

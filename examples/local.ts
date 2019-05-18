@@ -1,9 +1,6 @@
-/**
- * Copyright (C) 2018 Silas B. Domingos
+/*!
+ * Copyright (C) 2018-2019 Silas B. Domingos
  * This source code is licensed under the MIT License as described in the file LICENSE.
- *
- * The proposal of this example is to show how to implement the dependency injection using only
- * the local injection manager.
  */
 import * as Class from '@singleware/class';
 import * as Injection from '../source';
