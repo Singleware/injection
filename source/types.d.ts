@@ -12,3 +12,8 @@ export type Constructor<T extends Object = any> = new (...args: any[]) => T;
  * Type declaration for class decorators.
  */
 export type ClassDecorator = <T extends Object>(type: Constructor<T>) => any;
+
+/**
+ * Type declaration for decorators of classes and members.
+ */
+export type GenericDecorator = <T>(scope: Object | Function, property?: PropertyKey, descriptor?: TypedPropertyDescriptor<T>) => any;

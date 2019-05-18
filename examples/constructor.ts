@@ -5,41 +5,12 @@
 import * as Class from '@singleware/class';
 import * as Injection from '../source';
 
-/**
- * Example of dependency A.
- */
-@Injection.Describe()
-@Class.Describe()
-class DependencyA extends Class.Null {
-  @Class.Private()
-  private counter = 0;
-
-  @Class.Public()
-  public count(): number {
-    return this.counter++;
-  }
-}
-
-/**
- * Example of dependency B.
- * This is a singleton dependency.
- */
-@Injection.Describe({ singleton: true })
-@Class.Describe()
-class DependencyB extends DependencyA {}
-
-/**
- * Example of dependency C.
- * This is a named dependency.
- */
-@Injection.Describe({ name: 'named' })
-@Class.Describe()
-class DependencyC extends DependencyA {}
+import * as Dependencies from './dependencies';
 
 /**
  * Example of dependent A.
  */
-@Injection.Inject(DependencyA, DependencyC)
+@Injection.Inject(Dependencies.A, Dependencies.C)
 @Class.Describe()
 class DependentA extends Class.Null {
   /**
@@ -49,14 +20,14 @@ class DependentA extends Class.Null {
    */
   constructor(dependencies: any, parameters: any[]) {
     super();
-    console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'C:', dependencies.named.count());
+    console.log('P:', parameters, 'A:', dependencies.A.count(), 'C:', dependencies.named.count());
   }
 }
 
 /**
  * Example of dependent B.
  */
-@Injection.Inject(DependencyA, DependencyB)
+@Injection.Inject(Dependencies.A, Dependencies.B)
 @Class.Describe()
 class DependentB extends Class.Null {
   /**
@@ -66,7 +37,7 @@ class DependentB extends Class.Null {
    */
   constructor(dependencies: any, parameters: any[]) {
     super();
-    console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'B:', dependencies.DependencyB.count());
+    console.log('P:', parameters, 'A:', dependencies.A.count(), 'B:', dependencies.B.count());
   }
 }
 

@@ -12,51 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const Class = require("@singleware/class");
 const Injection = require("../source");
-/**
- * Example of dependency A.
- */
-let DependencyA = class DependencyA extends Class.Null {
-    /**
-     * Example of dependency A.
-     */
-    constructor() {
-        super(...arguments);
-        this.counter = 0;
-    }
-    count() {
-        return this.counter++;
-    }
-};
-__decorate([
-    Class.Private()
-], DependencyA.prototype, "counter", void 0);
-__decorate([
-    Class.Public()
-], DependencyA.prototype, "count", null);
-DependencyA = __decorate([
-    Injection.Describe(),
-    Class.Describe()
-], DependencyA);
-/**
- * Example of dependency B.
- * This is a singleton dependency.
- */
-let DependencyB = class DependencyB extends DependencyA {
-};
-DependencyB = __decorate([
-    Injection.Describe({ singleton: true }),
-    Class.Describe()
-], DependencyB);
-/**
- * Example of dependency C.
- * This is a named dependency.
- */
-let DependencyC = class DependencyC extends DependencyA {
-};
-DependencyC = __decorate([
-    Injection.Describe({ name: 'named' }),
-    Class.Describe()
-], DependencyC);
+const Dependencies = require("./dependencies");
 /**
  * Example of dependent A.
  */
@@ -68,11 +24,11 @@ let DependentA = class DependentA extends Class.Null {
      */
     constructor(dependencies, parameters) {
         super();
-        console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'C:', dependencies.named.count());
+        console.log('P:', parameters, 'A:', dependencies.A.count(), 'C:', dependencies.named.count());
     }
 };
 DependentA = __decorate([
-    Injection.Inject(DependencyA, DependencyC),
+    Injection.Inject(Dependencies.A, Dependencies.C),
     Class.Describe()
 ], DependentA);
 /**
@@ -86,11 +42,11 @@ let DependentB = class DependentB extends Class.Null {
      */
     constructor(dependencies, parameters) {
         super();
-        console.log('P:', parameters, 'A:', dependencies.DependencyA.count(), 'B:', dependencies.DependencyB.count());
+        console.log('P:', parameters, 'A:', dependencies.A.count(), 'B:', dependencies.B.count());
     }
 };
 DependentB = __decorate([
-    Injection.Inject(DependencyA, DependencyB),
+    Injection.Inject(Dependencies.A, Dependencies.B),
     Class.Describe()
 ], DependentB);
 /**

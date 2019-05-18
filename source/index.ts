@@ -8,10 +8,11 @@ export { Settings } from './settings';
 /**
  * Declarations.
  */
-import { Manager } from './manager';
+import { Constructor, ClassDecorator, GenericDecorator } from './types';
 import { Settings } from './settings';
-import { Constructor, ClassDecorator } from './types';
-export type Dependency<T> = Constructor<T>;
+import { Manager } from './manager';
+
+export type Dependency<T = any> = Constructor<T>;
 
 // Global manager.
 const global = new Manager();
@@ -24,11 +25,13 @@ const global = new Manager();
 export const Describe = (settings?: Settings): ClassDecorator => global.Describe(settings);
 
 /**
- * Decorates the specified class to be injected by the specified global dependencies.
- * @param list List of dependencies.
+ * Decorates a class type or class property to be injected by the specified dependencies.
+ * @param dependency First dependency.
+ * @param dependencies Remaining dependencies.
  * @returns Returns the decorator method.
+ * @throws Throws an error when multiple dependencies are specified in a class property injection.
  */
-export const Inject = (...list: Dependency<any>[]): ClassDecorator => global.Inject(...list);
+export const Inject = (dependency: Dependency, ...dependencies: Dependency[]): GenericDecorator => global.Inject(dependency, ...dependencies);
 
 /**
  * Resolves the current instance of the specified class type.

@@ -6,9 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 var manager_1 = require("./manager");
 exports.Manager = manager_1.Manager;
-/**
- * Declarations.
- */
 const manager_2 = require("./manager");
 // Global manager.
 const global = new manager_2.Manager();
@@ -19,11 +16,13 @@ const global = new manager_2.Manager();
  */
 exports.Describe = (settings) => global.Describe(settings);
 /**
- * Decorates the specified class to be injected by the specified global dependencies.
- * @param list List of dependencies.
+ * Decorates a class type or class property to be injected by the specified dependencies.
+ * @param dependency First dependency.
+ * @param dependencies Remaining dependencies.
  * @returns Returns the decorator method.
+ * @throws Throws an error when multiple dependencies are specified in a class property injection.
  */
-exports.Inject = (...list) => global.Inject(...list);
+exports.Inject = (dependency, ...dependencies) => global.Inject(dependency, ...dependencies);
 /**
  * Resolves the current instance of the specified class type.
  * @param type Class type.
