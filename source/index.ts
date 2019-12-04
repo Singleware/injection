@@ -8,17 +8,20 @@ export { Settings } from './settings';
 /**
  * Declarations.
  */
-import { Constructor, ClassDecorator, GenericDecorator } from './types';
+import { ConstructorClass, ConstructorCallback, ClassDecorator, GenericDecorator } from './types';
 import { Settings } from './settings';
 import { Manager } from './manager';
-
-export type Dependency<T = any> = Constructor<T>;
 
 // Global manager.
 const global = new Manager();
 
 /**
- * Decorates the specified class to be a global dependency class.
+ * Type declaration for a dependency constructor type.
+ */
+export type Dependency<T extends Object = any> = ConstructorClass<T> | ConstructorCallback<T>;
+
+/**
+ * Decorates the specified class to be a dependency class.
  * @param settings Dependency settings.
  * @returns Returns the decorator method.
  */
@@ -26,25 +29,29 @@ export const Describe = (settings?: Settings): ClassDecorator => global.Describe
 
 /**
  * Decorates a class type or class property to be injected by the specified dependencies.
- * @param dependency First dependency.
- * @param dependencies Remaining dependencies.
+ * @param dependency First dependency class type.
+ * @param dependencies Remaining dependency class types.
  * @returns Returns the decorator method.
- * @throws Throws an error when multiple dependencies are specified in a class property injection.
+ * @throws Throws an error when multiple dependencies are injected in class properties.
  */
-export const Inject = (dependency: Dependency, ...dependencies: Dependency[]): GenericDecorator => global.Inject(dependency, ...dependencies);
+export const Inject = (dependency: Dependency, ...dependencies: Dependency[]): GenericDecorator =>
+  global.Inject(dependency, ...dependencies);
 
 /**
- * Resolves the current instance of the specified class type.
- * @param type Class type.
- * @throws Throws a type error when the class type does not exists in the dependencies.
- * @returns Returns the resolved instance.
+ * Constructs a new instance of the specified dependency.
+ * @param dependency Dependency class type.
+ * @param args Construction arguments.
+ * @returns Returns a new instance of the specified dependency.
  */
-export const resolve = <T extends Object>(type: Dependency<T>): T => global.resolve(type);
+export const construct = <T extends Object>(dependency: Dependency<T>, ...args: any[]): T =>
+  global.construct(dependency, ...args);
 
 /**
- * Constructs a new instance of the specified class type.
- * @param type Class type.
- * @param parameters Initial parameters.
- * @returns Returns a new instance of the specified class type.
+ * Resolve the current instance of the specified dependency.
+ * @param dependency Dependency class type.
+ * @param args Construction arguments.
+ * @returns Returns the resolved dependency instance.
+ * @throws Throws a type error when the dependency isn't valid.
  */
-export const construct = <T extends Object>(type: Dependency<T>, ...parameters: any[]): T => global.construct(type, ...parameters);
+export const resolve = <T extends Object>(dependency: Dependency<T>, ...args: any[]): T =>
+  global.resolve(dependency, ...args);

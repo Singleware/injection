@@ -21,66 +21,79 @@ let Manager = class Manager extends Class.Null {
     constructor() {
         super(...arguments);
         /**
-         * Map of injected properties.
+         * Map of dependency settings.
          */
-        this.injectionsMap = new WeakMap();
+        this.settingsMap = new WeakMap();
         /**
          * Map of singleton instances.
          */
         this.singletonsMap = new WeakMap();
         /**
-         * Map of dependency settings.
+         * Map of injected properties.
          */
-        this.settingsMap = new WeakMap();
+        this.injectionsMap = new WeakMap();
     }
     /**
-     * Wraps the specified dependency list in the given class type.
+     * Determines whether or not the specified dependency is a class type.
+     * @param dependency Dependency class type.
+     * @returns Returns true when the specified dependency is a class type, false otherwise.
+     */
+    isClass(dependency) {
+        return `${dependency.prototype ? dependency.prototype.constructor : dependency}`.startsWith('class');
+    }
+    /**
+     * Wraps the constructor of the specified class type to be injected by the given dependencies.
      * @param type Class type.
-     * @param dependencies Dependency class list.
+     * @param dependencies List of dependency class types.
      * @returns Returns the wrapped class type.
      */
-    wrapClass(type, dependencies) {
+    wrapConstructor(type, dependencies) {
         return new Proxy(type, {
             construct: (target, parameters, other) => {
                 const list = {};
                 for (const type of dependencies) {
-                    const settings = this.settingsMap.get(type.prototype.constructor);
-                    list[settings.name || type.name] = this.resolve(type);
+                    const instance = this.resolve(type);
+                    const constructor = Reflect.getPrototypeOf(instance).constructor;
+                    const settings = this.settingsMap.get(constructor);
+                    list[settings.name || constructor.name] = instance;
                 }
                 return Reflect.construct(target, [list, parameters], other);
             }
         });
     }
     /**
-     * Creates a new property for the specified dependency.
+     * Creates a new property that will use the specified dependency.
      * @param property Property name.
-     * @param dependency Dependency class.
+     * @param dependency Dependency class type.
      * @returns Returns the generated property descriptor.
      */
     createProperty(property, dependency) {
         const resolver = this.resolve.bind(this, dependency);
-        const injections = this.injectionsMap;
-        let map;
+        const injectionsMap = this.injectionsMap;
+        let currentMap;
         return {
             enumerable: false,
             get: function () {
                 const context = Class.resolve(this);
-                if (!(map = injections.get(context))) {
-                    injections.set(context, (map = {}));
+                if (!(currentMap = injectionsMap.get(context))) {
+                    injectionsMap.set(context, (currentMap = {}));
                 }
-                return property in map ? map[property] : (map[property] = resolver());
+                if (!(property in currentMap)) {
+                    return (currentMap[property] = resolver());
+                }
+                return currentMap[property];
             },
             set: function () {
-                throw new Error(`Injected dependencies are read-only.`);
+                throw new Error(`Injected dependencies make properties read-only.`);
             }
         };
     }
     /**
      * Wraps the specified dependency into the given property descriptor.
      * @param property Property name.
-     * @param dependency Dependency class.
+     * @param dependency Dependency class type.
      * @param descriptor Property descriptor.
-     * @returns Returns the specified property descriptor or a new generated property descriptor.
+     * @returns Returns the specified property descriptor or a new property descriptor.
      * @throws Throws an error when the property descriptor is a method.
      */
     wrapProperty(property, dependency, descriptor) {
@@ -93,17 +106,18 @@ let Manager = class Manager extends Class.Null {
             }
             else {
                 const resolver = this.resolve.bind(this, dependency);
-                const getter = descriptor.get;
-                const setter = descriptor.set;
+                const realGetter = descriptor.get;
+                const realSetter = descriptor.set;
                 descriptor.get = function () {
-                    let instance = getter.call(this);
+                    let instance = realGetter.call(this);
                     if (!instance) {
-                        setter.call(this, (instance = resolver()));
+                        instance = resolver();
+                        realSetter.call(this, instance);
                     }
                     return instance;
                 };
                 descriptor.set = function () {
-                    throw new Error(`Injected dependencies are read-only.`);
+                    throw new Error(`Injected dependencies make properties read-only.`);
                 };
                 return descriptor;
             }
@@ -116,23 +130,24 @@ let Manager = class Manager extends Class.Null {
      */
     Describe(settings) {
         return (type) => {
-            if (this.settingsMap.has(type.prototype.constructor)) {
-                throw new TypeError(`Dependency '${type.name}' is already described.`);
+            const constructor = type.prototype.constructor;
+            if (this.settingsMap.has(constructor)) {
+                throw new TypeError(`Dependency '${constructor.name}' is already described.`);
             }
-            this.settingsMap.set(type.prototype.constructor, settings || {});
+            this.settingsMap.set(constructor, settings || {});
         };
     }
     /**
      * Decorates a class type or class property to be injected by the specified dependencies.
-     * @param dependency First dependency.
-     * @param dependencies Remaining dependencies.
+     * @param dependency First dependency class type.
+     * @param dependencies Remaining dependency class types.
      * @returns Returns the decorator method.
-     * @throws Throws an error when multiple dependencies are specified in a class property injection.
+     * @throws Throws an error when multiple dependencies are injected in class properties.
      */
     Inject(dependency, ...dependencies) {
         return (scope, property, descriptor) => {
             if (!property) {
-                return this.wrapClass(scope, [dependency, ...dependencies]);
+                return this.wrapConstructor(scope, [dependency, ...dependencies]);
             }
             else {
                 if (dependencies.length > 0) {
@@ -143,52 +158,56 @@ let Manager = class Manager extends Class.Null {
         };
     }
     /**
-     * Resolves the current instance from the specified class type.
-     * @param type Class type.
-     * @throws Throws a type error when the class type isn't a described dependency.
-     * @returns Returns the resolved instance.
+     * Constructs a new instance of the specified dependency.
+     * @param dependency Dependency class type.
+     * @param args Construction arguments.
+     * @returns Returns a new instance of the specified dependency.
      */
-    resolve(type) {
+    construct(dependency, ...args) {
+        return new (this.isClass(dependency) ? dependency : dependency())(...args);
+    }
+    /**
+     * Resolve the current instance of the specified dependency.
+     * @param dependency Dependency class type.
+     * @param args Construction arguments.
+     * @returns Returns the resolved dependency instance.
+     * @throws Throws a type error when the dependency isn't valid.
+     */
+    resolve(dependency, ...args) {
+        const type = this.isClass(dependency) ? dependency : dependency();
         const constructor = type.prototype.constructor;
         const settings = this.settingsMap.get(constructor);
         if (!settings) {
-            throw new TypeError(`Dependency '${type ? type.name : void 0}' doesn't found.`);
+            throw new TypeError(`Dependency '${constructor.name}' doesn't found.`);
         }
         else {
-            if (!settings.singleton) {
-                return this.construct(type);
-            }
-            else {
+            if (settings.singleton) {
                 let instance = this.singletonsMap.get(constructor);
                 if (!instance) {
-                    this.singletonsMap.set(constructor, (instance = this.construct(type)));
+                    instance = new type(...args);
+                    this.singletonsMap.set(constructor, instance);
                 }
                 return instance;
             }
+            return new type(...args);
         }
     }
-    /**
-     * Constructs a new instance for the specified class type.
-     * @param type Class type.
-     * @param parameters Initial parameters.
-     * @returns Returns a new instance of the specified class type.
-     */
-    construct(type, ...parameters) {
-        return new type(...parameters);
-    }
 };
-__decorate([
-    Class.Private()
-], Manager.prototype, "injectionsMap", void 0);
-__decorate([
-    Class.Private()
-], Manager.prototype, "singletonsMap", void 0);
 __decorate([
     Class.Private()
 ], Manager.prototype, "settingsMap", void 0);
 __decorate([
     Class.Private()
-], Manager.prototype, "wrapClass", null);
+], Manager.prototype, "singletonsMap", void 0);
+__decorate([
+    Class.Private()
+], Manager.prototype, "injectionsMap", void 0);
+__decorate([
+    Class.Private()
+], Manager.prototype, "isClass", null);
+__decorate([
+    Class.Private()
+], Manager.prototype, "wrapConstructor", null);
 __decorate([
     Class.Private()
 ], Manager.prototype, "createProperty", null);
@@ -203,10 +222,10 @@ __decorate([
 ], Manager.prototype, "Inject", null);
 __decorate([
     Class.Public()
-], Manager.prototype, "resolve", null);
+], Manager.prototype, "construct", null);
 __decorate([
     Class.Public()
-], Manager.prototype, "construct", null);
+], Manager.prototype, "resolve", null);
 Manager = __decorate([
     Class.Describe()
 ], Manager);

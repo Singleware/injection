@@ -5,3 +5,5 @@
 export { A } from './a';
 export { B } from './b';
 export { C } from './c';
+export { D } from './d';
+export { E } from './e';

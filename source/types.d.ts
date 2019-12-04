@@ -6,14 +6,23 @@
 /**
  * Type declaration for class constructors.
  */
-export type Constructor<T extends Object = any> = new (...args: any[]) => T;
+export type ConstructorClass<T extends Object = any> = new (...args: any[]) => T;
+
+/**
+ * Type declaration for class constructor callbacks.
+ */
+export type ConstructorCallback<T extends Object = any> = () => ConstructorClass<T>;
 
 /**
  * Type declaration for class decorators.
  */
-export type ClassDecorator = <T extends Object>(type: Constructor<T>) => any;
+export type ClassDecorator = <T extends Object>(type: ConstructorClass<T>) => any;
 
 /**
  * Type declaration for decorators of classes and members.
  */
-export type GenericDecorator = <T>(scope: Object | Function, property?: PropertyKey, descriptor?: TypedPropertyDescriptor<T>) => any;
+export type GenericDecorator = <T>(
+  scope: Object | Function,
+  property?: PropertyKey,
+  descriptor?: TypedPropertyDescriptor<T>
+) => any;

@@ -4,7 +4,7 @@
  */
 import * as Class from '@singleware/class';
 
-import { Constructor, ClassDecorator, GenericDecorator } from './types';
+import { ConstructorClass, ConstructorCallback, ClassDecorator, GenericDecorator } from './types';
 import { Settings } from './settings';
 
 /**
@@ -13,37 +13,54 @@ import { Settings } from './settings';
 @Class.Describe()
 export class Manager extends Class.Null {
   /**
+   * Map of dependency settings.
+   */
+  @Class.Private()
+  private settingsMap = new WeakMap<ConstructorClass, Settings>();
+
+  /**
+   * Map of singleton instances.
+   */
+  @Class.Private()
+  private singletonsMap = new WeakMap<ConstructorClass, Object>();
+
+  /**
    * Map of injected properties.
    */
   @Class.Private()
   private injectionsMap = new WeakMap<Object, any>();
 
   /**
-   * Map of singleton instances.
+   * Determines whether or not the specified dependency is a class type.
+   * @param dependency Dependency class type.
+   * @returns Returns true when the specified dependency is a class type, false otherwise.
    */
   @Class.Private()
-  private singletonsMap = new WeakMap<Constructor, Object>();
+  private isClass<T extends Object>(
+    dependency: ConstructorClass<T> | ConstructorCallback<T>
+  ): dependency is ConstructorClass<T> {
+    return `${dependency.prototype ? dependency.prototype.constructor : dependency}`.startsWith('class');
+  }
 
   /**
-   * Map of dependency settings.
-   */
-  @Class.Private()
-  private settingsMap = new WeakMap<Constructor, Settings>();
-
-  /**
-   * Wraps the specified dependency list in the given class type.
+   * Wraps the constructor of the specified class type to be injected by the given dependencies.
    * @param type Class type.
-   * @param dependencies Dependency class list.
+   * @param dependencies List of dependency class types.
    * @returns Returns the wrapped class type.
    */
   @Class.Private()
-  private wrapClass<T extends Object>(type: Constructor<T>, dependencies: Constructor[]): Constructor<T> {
+  private wrapConstructor<T extends Object>(
+    type: ConstructorClass<T>,
+    dependencies: (ConstructorClass | ConstructorCallback)[]
+  ): ConstructorClass<T> {
     return new Proxy(type, {
-      construct: (target: Constructor<T>, parameters: IArguments, other: any): T => {
+      construct: (target: ConstructorClass<T>, parameters: IArguments, other: any): T => {
         const list = <any>{};
         for (const type of dependencies) {
-          const settings = <Settings>this.settingsMap.get(type.prototype.constructor);
-          list[settings.name || type.name] = this.resolve(type);
+          const instance = this.resolve(type);
+          const constructor = <ConstructorClass>Reflect.getPrototypeOf(instance).constructor;
+          const settings = <Settings>this.settingsMap.get(constructor);
+          list[settings.name || constructor.name] = instance;
         }
         return Reflect.construct(target, [list, parameters], other);
       }
@@ -51,27 +68,33 @@ export class Manager extends Class.Null {
   }
 
   /**
-   * Creates a new property for the specified dependency.
+   * Creates a new property that will use the specified dependency.
    * @param property Property name.
-   * @param dependency Dependency class.
+   * @param dependency Dependency class type.
    * @returns Returns the generated property descriptor.
    */
   @Class.Private()
-  private createProperty(property: PropertyKey, dependency: Constructor): PropertyDescriptor {
+  private createProperty<T extends Object>(
+    property: PropertyKey,
+    dependency: ConstructorClass<T> | ConstructorCallback<T>
+  ): PropertyDescriptor {
     const resolver = this.resolve.bind(this, dependency);
-    const injections = this.injectionsMap;
-    let map;
+    const injectionsMap = this.injectionsMap;
+    let currentMap;
     return {
       enumerable: false,
       get: function(this: Object): any {
         const context = Class.resolve(this);
-        if (!(map = injections.get(context))) {
-          injections.set(context, (map = {}));
+        if (!(currentMap = injectionsMap.get(context))) {
+          injectionsMap.set(context, (currentMap = {}));
         }
-        return property in map ? map[property] : (map[property] = resolver());
+        if (!(property in currentMap)) {
+          return (currentMap[property] = resolver());
+        }
+        return currentMap[property];
       },
       set: function(): void {
-        throw new Error(`Injected dependencies are read-only.`);
+        throw new Error(`Injected dependencies make properties read-only.`);
       }
     };
   }
@@ -79,13 +102,17 @@ export class Manager extends Class.Null {
   /**
    * Wraps the specified dependency into the given property descriptor.
    * @param property Property name.
-   * @param dependency Dependency class.
+   * @param dependency Dependency class type.
    * @param descriptor Property descriptor.
-   * @returns Returns the specified property descriptor or a new generated property descriptor.
+   * @returns Returns the specified property descriptor or a new property descriptor.
    * @throws Throws an error when the property descriptor is a method.
    */
   @Class.Private()
-  private wrapProperty(property: PropertyKey, dependency: Constructor, descriptor: PropertyDescriptor): PropertyDescriptor {
+  private wrapProperty<T extends Object>(
+    property: PropertyKey,
+    dependency: ConstructorClass<T> | ConstructorCallback<T>,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor {
     if (descriptor.value instanceof Function) {
       throw new Error(`Only properties are allowed for dependency injection.`);
     } else {
@@ -93,17 +120,18 @@ export class Manager extends Class.Null {
         return this.createProperty(property, dependency);
       } else {
         const resolver = this.resolve.bind(this, dependency);
-        const getter = descriptor.get;
-        const setter = descriptor.set;
+        const realGetter = descriptor.get;
+        const realSetter = descriptor.set;
         descriptor.get = function(this: Object): any {
-          let instance = getter.call(this);
+          let instance = realGetter.call(this);
           if (!instance) {
-            setter.call(this, (instance = resolver()));
+            instance = resolver();
+            realSetter.call(this, instance);
           }
           return instance;
         };
         descriptor.set = function(): void {
-          throw new Error(`Injected dependencies are read-only.`);
+          throw new Error(`Injected dependencies make properties read-only.`);
         };
         return descriptor;
       }
@@ -117,26 +145,30 @@ export class Manager extends Class.Null {
    */
   @Class.Public()
   public Describe(settings?: Settings): ClassDecorator {
-    return <T extends Object>(type: Constructor<T>): void => {
-      if (this.settingsMap.has(type.prototype.constructor)) {
-        throw new TypeError(`Dependency '${type.name}' is already described.`);
+    return <T extends Object>(type: ConstructorClass<T>): void => {
+      const constructor = type.prototype.constructor;
+      if (this.settingsMap.has(constructor)) {
+        throw new TypeError(`Dependency '${constructor.name}' is already described.`);
       }
-      this.settingsMap.set(type.prototype.constructor, settings || {});
+      this.settingsMap.set(constructor, settings || {});
     };
   }
 
   /**
    * Decorates a class type or class property to be injected by the specified dependencies.
-   * @param dependency First dependency.
-   * @param dependencies Remaining dependencies.
+   * @param dependency First dependency class type.
+   * @param dependencies Remaining dependency class types.
    * @returns Returns the decorator method.
-   * @throws Throws an error when multiple dependencies are specified in a class property injection.
+   * @throws Throws an error when multiple dependencies are injected in class properties.
    */
   @Class.Public()
-  public Inject(dependency: Constructor, ...dependencies: Constructor[]): GenericDecorator {
+  public Inject(
+    dependency: ConstructorClass | ConstructorCallback,
+    ...dependencies: (ConstructorClass | ConstructorCallback)[]
+  ): GenericDecorator {
     return (scope: Object, property?: PropertyKey, descriptor?: PropertyDescriptor): any => {
       if (!property) {
-        return this.wrapClass(<Constructor>scope, [dependency, ...dependencies]);
+        return this.wrapConstructor(<ConstructorClass>scope, [dependency, ...dependencies]);
       } else {
         if (dependencies.length > 0) {
           throw new Error(`Multiple dependency injection in a class property isn't allowed.`);
@@ -147,38 +179,40 @@ export class Manager extends Class.Null {
   }
 
   /**
-   * Resolves the current instance from the specified class type.
-   * @param type Class type.
-   * @throws Throws a type error when the class type isn't a described dependency.
-   * @returns Returns the resolved instance.
+   * Constructs a new instance of the specified dependency.
+   * @param dependency Dependency class type.
+   * @param args Construction arguments.
+   * @returns Returns a new instance of the specified dependency.
    */
   @Class.Public()
-  public resolve<T extends Object>(type: Constructor<T>): T {
-    const constructor = type.prototype.constructor;
-    const settings = <Settings>this.settingsMap.get(constructor);
-    if (!settings) {
-      throw new TypeError(`Dependency '${type ? type.name : void 0}' doesn't found.`);
-    } else {
-      if (!settings.singleton) {
-        return this.construct(type);
-      } else {
-        let instance = <T>this.singletonsMap.get(constructor);
-        if (!instance) {
-          this.singletonsMap.set(constructor, (instance = this.construct(type)));
-        }
-        return instance;
-      }
-    }
+  public construct<T extends Object>(dependency: ConstructorClass<T> | ConstructorCallback<T>, ...args: any[]): T {
+    return new (this.isClass(dependency) ? dependency : dependency())(...args);
   }
 
   /**
-   * Constructs a new instance for the specified class type.
-   * @param type Class type.
-   * @param parameters Initial parameters.
-   * @returns Returns a new instance of the specified class type.
+   * Resolve the current instance of the specified dependency.
+   * @param dependency Dependency class type.
+   * @param args Construction arguments.
+   * @returns Returns the resolved dependency instance.
+   * @throws Throws a type error when the dependency isn't valid.
    */
   @Class.Public()
-  public construct<T extends Object>(type: Constructor<T>, ...parameters: any[]): T {
-    return new type(...parameters);
+  public resolve<T extends Object>(dependency: ConstructorClass<T> | ConstructorCallback<T>, ...args: any[]): T {
+    const type = this.isClass(dependency) ? dependency : dependency();
+    const constructor = type.prototype.constructor;
+    const settings = this.settingsMap.get(constructor);
+    if (!settings) {
+      throw new TypeError(`Dependency '${constructor.name}' doesn't found.`);
+    } else {
+      if (settings.singleton) {
+        let instance = <T>this.singletonsMap.get(constructor);
+        if (!instance) {
+          instance = new type(...args);
+          this.singletonsMap.set(constructor, instance);
+        }
+        return instance;
+      }
+      return new type(...args);
+    }
   }
 }

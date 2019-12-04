@@ -10,3 +10,7 @@ var b_1 = require("./b");
 exports.B = b_1.B;
 var c_1 = require("./c");
 exports.C = c_1.C;
+var d_1 = require("./d");
+exports.D = d_1.D;
+var e_1 = require("./e");
+exports.E = e_1.E;

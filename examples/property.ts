@@ -73,4 +73,10 @@ class DependentB extends Class.Null {
 /**
  * Construct the instances solving all the dependencies.
  */
-[new DependentA('Instance 1'), new DependentA('Instance 2'), new DependentB('Instance 3'), new DependentB('Instance 4'), new DependentB('Instance 5')];
+[
+  new DependentA('Instance 1'),
+  new DependentA('Instance 2'),
+  new DependentB('Instance 3'),
+  new DependentB('Instance 4'),
+  new DependentB('Instance 5')
+];
